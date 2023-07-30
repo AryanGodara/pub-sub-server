@@ -1,0 +1,14 @@
+(executable
+ (public_name midiServer)
+ (name main)
+ (libraries
+  midiServer
+  logs
+  portmidi
+  runtime_events
+  logs.lwt
+  lwt
+  stdio
+  lwt.unix
+  str
+  unix))
