@@ -5,9 +5,9 @@ type midi_message = int array
 
 (* Define the type for the RTP-MIDI packet *)
 type rtpmidi_packet = {
-  timestamp : int;         (* Timestamp for the MIDI message *)
-  sequence_number : int;   (* Sequence number for packet ordering *)
-  midi_data : midi_message;(* MIDI message data *)
+  timestamp : int; (* Timestamp for the MIDI message *)
+  sequence_number : int; (* Sequence number for packet ordering *)
+  midi_data : midi_message; (* MIDI message data *)
 }
 
 (* Define the signature for the RTP-MIDI module *)
