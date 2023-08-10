@@ -1,15 +1,17 @@
-module type TOPIC_FILTER = sig
+(* module type TOPIC_FILTER = sig
   val addSocket : string -> Unix.file_descr -> unit
   val removeSocket : string -> Unix.file_descr -> unit
   val getSockets : string -> Unix.file_descr list
-end
+end *)
 
-module TOPICFILTER : TOPIC_FILTER = struct
+module TOPIC_FILTER = struct
+  (* module TOPICFILTER : TOPIC_FILTER = struct *)
   module UnixSocketMap = Map.Make (String)
 
   let socketMap = ref UnixSocketMap.empty
 
   let addSocket topic socket =
+    print_endline "Adding socket to topic";
     let sockets =
       try UnixSocketMap.find topic !socketMap with Not_found -> []
     in
