@@ -9,6 +9,7 @@ type pubsubmessage =
   | SubscribeRequest of string
   | UnsubscribeRequest of string
   | PublishRequest of string * string
+  | DefPublishRequest of string
   | CloseConnRequest
   | InvalidRequest of string
 
@@ -21,17 +22,32 @@ let handle_message msg client_address =
     | [ "subscribe"; topic ] -> SubscribeRequest topic
     | [ "unsubscribe"; topic ] -> UnsubscribeRequest topic
     | [ "publish"; topic; message ] -> PublishRequest (topic, message)
+    | [ "publish"; message ] -> DefPublishRequest message
     | [ "quit"; "your"; "server" ] -> CloseConnRequest
-    | [ "quit";] -> CloseConnRequest
+    | [ "quit" ] -> CloseConnRequest
     | _ -> InvalidRequest "Invalid pubsubmessage format"
   in
   match udpMsg with
   | SubscribeRequest topic ->
       TOPIC_FILTER.addSocket topic client_address;
+      Play.play_note (Array.of_list [ '0'; char_of_int 60; char_of_int 127 ]) ();
       "Subscribed to " ^ topic
   | UnsubscribeRequest topic ->
       TOPIC_FILTER.removeSocket topic client_address;
       "Unsubscribed from " ^ topic
+  | DefPublishRequest message ->
+      let msg_list = Str.split_delim (Str.regexp ",") message in
+      print_endline "msg_list = ";
+      print_endline (String.concat " ; " msg_list);
+      let _ = match msg_list with
+      | [note; volume] ->
+        let arrayList = Array.of_list [ '0'; string_to_char note; string_to_char volume ] in
+        print_endline "arrayList = ";
+        print_endline (String.concat " ; " (List.map (fun x -> String.make 1 x) (Array.to_list arrayList)));
+        Play.play_note (arrayList) ();
+      | _ -> ();
+      in
+      "Published on channel 0"
   | PublishRequest (topic, message) -> (
       let msg_list = Str.split_delim (Str.regexp ",") message in
       match msg_list with
