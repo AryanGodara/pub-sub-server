@@ -21,7 +21,9 @@ let handle_message msg client_address =
     match lst with
     | [ "subscribe"; topic ] -> SubscribeRequest topic
     | [ "unsubscribe"; topic ] -> UnsubscribeRequest topic
-    | [ "publish"; topic; message ] -> PublishRequest (topic, message)
+    | [ "publish"; topic; message ] ->
+      print_endline ("Inside publish : " ^ topic ^ message);
+      PublishRequest (topic, message)
     | [ "publish"; message ] -> DefPublishRequest message
     | [ "quit"; "your"; "server" ] -> CloseConnRequest
     | [ "quit" ] -> CloseConnRequest
