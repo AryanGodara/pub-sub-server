@@ -1,5 +1,6 @@
 open Lwt.Infix
 open TopicFilter
+open Rtpmidi
 
 let listen_address = Unix.inet_addr_loopback
 let port = 9000
@@ -38,7 +39,14 @@ let handle_message msg client_address =
       TOPIC_FILTER.removeSocket topic client_address;
       "Unsubscribed from " ^ topic
   | DefPublishRequest message ->
-      let msg_list = Str.split_delim (Str.regexp ",") message in
+      let midiMessage  = Rtpmidi.UDP_SERIALIZER.deserialize (Bytes.of_string message) in
+      let channel = MIDI_MESSAGE.channel midiMessage in
+      let note = MIDI_MESSAGE.data1 midiMessage in
+      let velocity = MIDI_MESSAGE.data2 midiMessage in
+      let char_array = Array.of_list [ char_of_int channel; char_of_int note; char_of_int velocity ] in
+      Play.play_note char_array ();
+
+      (* let msg_list = Str.split_delim (Str.regexp ",") message in
       print_endline "msg_list = ";
       print_endline (String.concat " ; " msg_list);
       let _ = match msg_list with
@@ -48,8 +56,8 @@ let handle_message msg client_address =
         print_endline (String.concat " ; " (List.map (fun x -> String.make 1 x) (Array.to_list arrayList)));
         Play.play_note (arrayList) ();
       | _ -> ();
-      in
-      "Published on channel 0"
+      in *)
+      "Published on channel 0" ^ message
   | PublishRequest (topic, message) -> (
       let msg_list = Str.split_delim (Str.regexp ",") message in
       match msg_list with

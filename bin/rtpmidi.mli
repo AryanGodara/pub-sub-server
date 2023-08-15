@@ -1,44 +1,41 @@
-(* rtpmidi.mli *)
-
-(* Define the types for MIDI messages *)
-type midi_message = int array
-
-(* Define the type for the RTP-MIDI packet *)
-type rtpmidi_packet = {
-  timestamp : int; (* Timestamp for the MIDI message *)
-  sequence_number : int; (* Sequence number for packet ordering *)
-  midi_data : midi_message; (* MIDI message data *)
-}
-
-(* Define the signature for the RTP-MIDI module *)
-module type RTPMIDI = sig
-  (* Initialize the RTP-MIDI session *)
-  val init : unit -> unit
-
-  (* Convert MIDI data to RTP-MIDI packet *)
-  val midi_to_rtpmidi : midi_message -> rtpmidi_packet
-
-  (* Convert RTP-MIDI packet to MIDI data *)
-  val rtpmidi_to_midi : rtpmidi_packet -> midi_message
-
-  (* Send a RTP-MIDI packet over the network *)
-  val send_rtpmidi : rtpmidi_packet -> unit
-
-  (* Receive a RTP-MIDI packet from the network *)
-  val receive_rtpmidi : unit -> rtpmidi_packet option
-
-  (* Close the RTP-MIDI session and release resources *)
-  val close : unit -> unit
-end
-
-(* Define the signature for the MIDI data storage module *)
-module type MidiDataStorage = sig
-  (* Store a MIDI message *)
-  val store_midi : midi_message -> unit
-
-  (* Retrieve all stored MIDI messages *)
-  val get_all_midi : unit -> midi_message list
-
-  (* Clear all stored MIDI messages *)
-  val clear_all_midi : unit -> unit
-end
+(* Module to handle all types of operations on MIDI messages:
+   The rtpMIDI prodocol for UDP transfer , and the RTPMIDI protocol for conversion to portmidi compatible bytes *)
+    module MIDI_MESSAGE : sig
+      type t
+  
+      (* [t] stores the entire midi message; the idea is to use type b to serialize *)
+      type b = STATUS_BYTE of Bytes.t | DATA_BYTE of Bytes.t
+  
+      (* Constructors *)
+  
+      val create :
+        status:int -> channel:int -> data1:int -> data2:int -> timestamp:int -> t
+  
+      (* Getters *)
+      val status : t -> int
+      val channel : t -> int
+      val data1 : t -> int
+      val data2 : t -> int
+      val timestamp : t -> int
+      val valid_channel : int -> bool
+    end
+  
+    (* This module is to convert the struct into different bytes to pass to portmidi library *)
+    module PORTMIDI_SERIALIZER : sig end
+  
+    (* This module is to convert the struct into a single byte string which can be sent over UDP *)
+    module UDP_SERIALIZER : sig
+      type t = MIDI_MESSAGE.t
+  
+      val serialize : t -> bytes
+      (** [serialize t] serializes a MIDI message [t] into a byte string *)
+  
+      val deserialize : bytes -> t
+      (** [deserialize bytes] deserializes a byte string [bytes] into a MIDI message *)
+    end
+  
+    val midi_to_bytes : MIDI_MESSAGE.t -> Bytes.t
+    (** Convert a MIDI message to a byte string *)
+  
+    val bytes_to_midi : Bytes.t -> MIDI_MESSAGE.t
+    (** Convert a byte string to a MIDI message *)
