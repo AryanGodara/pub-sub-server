@@ -1,6 +1,7 @@
 open Lwt.Infix
 open TopicFilter
 open Rtpmidi
+open Play
 
 let listen_address = Unix.inet_addr_loopback
 let port = 9000
@@ -40,7 +41,10 @@ let handle_message msg client_address =
   | DefPublishRequest message ->
       "Published on channel 0" ^ message
   | PublishRequest (topic, message) ->
-          "Published " ^ message ^ " on " ^ topic 
+      let dev = Play.get_device () in
+      let midi_message = Rtpmidi.UDP_SERIALIZER.deserialize (Bytes.of_string message) in
+      Play.write_midi_message dev midi_message;
+      "Published " ^ message ^ " on " ^ topic 
   | CloseConnRequest -> "quit"
   | InvalidRequest msg -> msg
 
