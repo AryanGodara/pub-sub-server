@@ -132,24 +132,3 @@ let handle_error = function
 
 let write_output { Device.device; Device.device_id = _ } msg =
   Portmidi.write_output device msg |> handle_error
-
-(* type hardcoded_midi_message =
-   | NOTE_OFF of { note : char; velocity : char; channel : int; timestamp : int32 }
-   | NOTE_ON of { note : char; velocity : char; channel : int; timestamp : int32 }
-   | POLY_PRESSURE of { note : char; pressure : char; channel : int; timestamp : int32 }
-   | CONTROL_CHANGE of { controller : char; value : char; channel : int; timestamp : int32 }
-   | PROGRAM_CHANGE of { program : char; channel : int; timestamp : int32 }
-   | CHANNEL_PRESSURE of { pressure : char; channel : int; timestamp : int32 }
-   | PITCH_BEND of { value : int; channel : int; timestamp : int32 }
-   | SYSTEM_EXCLUSIVE of { data : int; timestamp : int32 }
-   | TIME_CODE of { value : char; timestamp : int32 }
-   | SONG_POSITION of { position : int; timestamp : int32 }
-   | SONG_SELECT of { song : char; timestamp : int32 }
-   | TUNE_REQUEST of { timestamp : int32 }
-   | END_OF_EXCLUSIVE of { timestamp : int32 }
-   | TIMING_CLOCK of { timestamp : int32 }
-   | START of { timestamp : int32 }
-   | CONTINUE of { timestamp : int32 }
-   | STOP of { timestamp : int32 }
-   | ACTIVE_SENSING of { timestamp : int32 }
-   | SYSTEM_RESET of { timestamp : int32 } *)

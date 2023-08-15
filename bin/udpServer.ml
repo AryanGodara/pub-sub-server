@@ -1,7 +1,5 @@
 open Lwt.Infix
 open TopicFilter
-open Rtpmidi
-open Play
 
 let listen_address = Unix.inet_addr_loopback
 let port = 9000
@@ -33,18 +31,18 @@ let handle_message msg client_address =
   match udpMsg with
   | SubscribeRequest topic ->
       TOPIC_FILTER.addSocket topic client_address;
-      (* Play.play_note (Array.of_list [ '0'; char_of_int 60; char_of_int 127 ]) (); *)
       "Subscribed to " ^ topic
   | UnsubscribeRequest topic ->
       TOPIC_FILTER.removeSocket topic client_address;
       "Unsubscribed from " ^ topic
-  | DefPublishRequest message ->
-      "Published on channel 0" ^ message
+  | DefPublishRequest message -> "Published on channel 0" ^ message
   | PublishRequest (topic, message) ->
       let dev = Play.get_device () in
-      let midi_message = Rtpmidi.UDP_SERIALIZER.deserialize (Bytes.of_string message) in
+      let midi_message =
+        Rtpmidi.UDP_SERIALIZER.deserialize (Bytes.of_string message)
+      in
       Play.write_midi_message dev midi_message;
-      "Published " ^ message ^ " on " ^ topic 
+      "Published " ^ message ^ " on " ^ topic
   | CloseConnRequest -> "quit"
   | InvalidRequest msg -> msg
 

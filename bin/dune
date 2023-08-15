@@ -1,5 +1,5 @@
 (executable
- (public_name midiServer)
+ (public_name outdatedMidiServer)
  (name main)
  (libraries
   midiServer

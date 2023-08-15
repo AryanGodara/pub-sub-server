@@ -93,5 +93,5 @@ type hardcoded_midi_message =
   | SYSTEM_RESET of { timestamp : int32 }
       (** Represents a MIDI message with specific data values *)
 
-val serialize_hardcoded_midi_message : hardcoded_midi_message -> Bytes.t
-(** Serializes the given hardcoded MIDI message to a byte array *)
+val convert_to_hardcoded_midi_message : MIDI_MESSAGE.t -> hardcoded_midi_message
+(** Converts the given MIDI message to a hardcoded MIDI message *)

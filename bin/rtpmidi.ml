@@ -162,12 +162,6 @@ module UDP_SERIALIZER = struct
     message
 end
 
-let midi_to_bytes (message : MIDI_MESSAGE.t) : Bytes.t =
-  UDP_SERIALIZER.serialize message
-
-let bytes_to_midi (bytes : Bytes.t) : MIDI_MESSAGE.t =
-  UDP_SERIALIZER.deserialize bytes
-
 type hardcoded_midi_message =
   | NOTE_OFF of {
       note : char;
@@ -302,35 +296,3 @@ let convert_to_hardcoded_midi_message (midi_message : MIDI_MESSAGE.t) :
       ACTIVE_SENSING { timestamp = Int32.of_int midi_message.timestamp }
   | SYSTEM_RESET ->
       SYSTEM_RESET { timestamp = Int32.of_int midi_message.timestamp }
-
-(* let deserialize bytes =
-   ! This implementation doesn't handle running status
-   let length = Bytes.length bytes in
-   if length <> 3 then failwith "Invalid MIDI message bytes";
-   let status_byte =
-     match !previous_status with
-     | Some byte -> byte
-     | None -> Bytes.get bytes 0
-   in
-   let message_type =
-     match int_of_char status_byte land 0xF0 with
-     | 0x80 -> NOTE_OFF
-     | 0x90 -> NOTE_ON
-     | 0xA0 -> POLY_PRESSURE
-     | 0xB0 -> CONTROL_CHANGE
-     | 0xC0 -> PROGRAM_CHANGE
-     | 0xD0 -> CHANNEL_PRESSURE
-     | 0xE0 -> PITCH_BEND
-     | _ -> failwith "Invalid MIDI message status byte"
-   in
-   let channel = int_of_char status_byte land 0x0F in
-   let data1 = Bytes.get bytes 1 in
-   let data2 = Bytes.get bytes 2 in
-   let timestamp = 0 in
-   (* Set timestamp to 0 for now *)
-   let message =
-     MIDI_MESSAGE.create ~message_type ~channel ~data1:(int_of_char data1)
-       ~data2:(int_of_char data2) ~timestamp
-   in
-   previous_status := Some status_byte;
-   message *)
