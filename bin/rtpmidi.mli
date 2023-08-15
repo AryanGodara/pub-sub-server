@@ -1,41 +1,97 @@
-(* Module to handle all types of operations on MIDI messages:
-   The rtpMIDI prodocol for UDP transfer , and the RTPMIDI protocol for conversion to portmidi compatible bytes *)
-    module MIDI_MESSAGE : sig
-      type t
-  
-      (* [t] stores the entire midi message; the idea is to use type b to serialize *)
-      type b = STATUS_BYTE of Bytes.t | DATA_BYTE of Bytes.t
-  
-      (* Constructors *)
-  
-      val create :
-        status:int -> channel:int -> data1:int -> data2:int -> timestamp:int -> t
-  
-      (* Getters *)
-      val status : t -> int
-      val channel : t -> int
-      val data1 : t -> int
-      val data2 : t -> int
-      val timestamp : t -> int
-      val valid_channel : int -> bool
-    end
-  
-    (* This module is to convert the struct into different bytes to pass to portmidi library *)
-    module PORTMIDI_SERIALIZER : sig end
-  
-    (* This module is to convert the struct into a single byte string which can be sent over UDP *)
-    module UDP_SERIALIZER : sig
-      type t = MIDI_MESSAGE.t
-  
-      val serialize : t -> bytes
-      (** [serialize t] serializes a MIDI message [t] into a byte string *)
-  
-      val deserialize : bytes -> t
-      (** [deserialize bytes] deserializes a byte string [bytes] into a MIDI message *)
-    end
-  
-    val midi_to_bytes : MIDI_MESSAGE.t -> Bytes.t
-    (** Convert a MIDI message to a byte string *)
-  
-    val bytes_to_midi : Bytes.t -> MIDI_MESSAGE.t
-    (** Convert a byte string to a MIDI message *)
+type midi_type =
+  | NOTE_OFF
+  | NOTE_ON
+  | POLY_PRESSURE
+  | CONTROL_CHANGE
+  | PROGRAM_CHANGE
+  | CHANNEL_PRESSURE
+  | PITCH_BEND
+  | SYSTEM_EXCLUSIVE
+  | TIME_CODE
+  | SONG_POSITION
+  | SONG_SELECT
+  | TUNE_REQUEST
+  | END_OF_EXCLUSIVE
+  | TIMING_CLOCK
+  | START
+  | CONTINUE
+  | STOP
+  | ACTIVE_SENSING
+  | SYSTEM_RESET
+
+module MIDI_MESSAGE : sig
+  type t = {
+    message_type : midi_type;
+    status_byte : int;
+    channel : int;
+    data1 : int;
+    data2 : int;
+    timestamp : int;
+  }
+
+  val message_type : t -> midi_type
+  (** Returns the MIDI message type of the given message *)
+
+  val create :
+    message_type:midi_type ->
+    channel:int ->
+    data1:int ->
+    data2:int ->
+    timestamp:int ->
+    t
+  (** Creates a new MIDI message with the given message type, channel, data
+      bytes, and timestamp *)
+end
+
+module UDP_SERIALIZER : sig
+  val serialize : MIDI_MESSAGE.t -> Bytes.t
+  (** Serializes the given MIDI message to a byte array *)
+
+  val deserialize : Bytes.t -> MIDI_MESSAGE.t
+  (** Deserializes the given byte array to a MIDI message *)
+end
+
+type hardcoded_midi_message =
+  | NOTE_OFF of {
+      note : char;
+      velocity : char;
+      channel : int;
+      timestamp : int32;
+    }
+  | NOTE_ON of {
+      note : char;
+      velocity : char;
+      channel : int;
+      timestamp : int32;
+    }
+  | POLY_PRESSURE of {
+      note : char;
+      pressure : char;
+      channel : int;
+      timestamp : int32;
+    }
+  | CONTROL_CHANGE of {
+      controller : char;
+      value : char;
+      channel : int;
+      timestamp : int32;
+    }
+  | PROGRAM_CHANGE of { program : char; channel : int; timestamp : int32 }
+  | CHANNEL_PRESSURE of { pressure : char; channel : int; timestamp : int32 }
+  | PITCH_BEND of { value : int; channel : int; timestamp : int32 }
+  | SYSTEM_EXCLUSIVE of { data : int; timestamp : int32 }
+  | TIME_CODE of { value : char; timestamp : int32 }
+  | SONG_POSITION of { position : int; timestamp : int32 }
+  | SONG_SELECT of { song : char; timestamp : int32 }
+  | TUNE_REQUEST of { timestamp : int32 }
+  | END_OF_EXCLUSIVE of { timestamp : int32 }
+  | TIMING_CLOCK of { timestamp : int32 }
+  | START of { timestamp : int32 }
+  | CONTINUE of { timestamp : int32 }
+  | STOP of { timestamp : int32 }
+  | ACTIVE_SENSING of { timestamp : int32 }
+  | SYSTEM_RESET of { timestamp : int32 }
+      (** Represents a MIDI message with specific data values *)
+
+val serialize_hardcoded_midi_message : hardcoded_midi_message -> Bytes.t
+(** Serializes the given hardcoded MIDI message to a byte array *)

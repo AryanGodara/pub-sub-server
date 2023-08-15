@@ -10,10 +10,10 @@ module Rtpmidi_receiver = struct
       match packet with
       | None -> loop ()
       | Some packet ->
-        let bytes = Rtp.get_payload packet in
-        let midi_message = bytes_to_midi bytes in
-        Udp.close socket;
-        midi_message
+          let bytes = Rtp.get_payload packet in
+          let midi_message = bytes_to_midi bytes in
+          Udp.close socket;
+          midi_message
     in
     let midi_message = loop () in
     midi_message

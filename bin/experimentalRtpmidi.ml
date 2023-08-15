@@ -59,18 +59,45 @@ module UDP_SERIALIZER = struct
   let previous_status = ref None
 
   let serialize (message : MIDI_MESSAGE.t) : Bytes.t =
-    let status_byte = Char.chr (message.MIDI_MESSAGE.status_byte lor message.MIDI_MESSAGE.channel) in
+    let status_byte =
+      Char.chr
+        (message.MIDI_MESSAGE.status_byte lor message.MIDI_MESSAGE.channel)
+    in
     let data1_byte = Char.chr message.MIDI_MESSAGE.data1 in
     let data2_byte = Char.chr message.MIDI_MESSAGE.data2 in
     let bytes =
       match message.MIDI_MESSAGE.message_type with
-      | NOTE_OFF -> Bytes.of_string (Printf.sprintf "%c%c%c" (Char.chr 0x80) data1_byte data2_byte)
-      | NOTE_ON -> Bytes.of_string (Printf.sprintf "%c%c%c" status_byte data1_byte data2_byte)
-      | POLY_PRESSURE -> Bytes.of_string (Printf.sprintf "%c%c%c" (char_of_int (0xA0 lor message.MIDI_MESSAGE.channel)) data1_byte data2_byte)
-      | CONTROL_CHANGE -> Bytes.of_string (Printf.sprintf "%c%c%c" (char_of_int (0xB0 lor message.MIDI_MESSAGE.channel)) data1_byte data2_byte)
-      | PROGRAM_CHANGE -> Bytes.of_string (Printf.sprintf "%c%c" (char_of_int (0xC0 lor message.MIDI_MESSAGE.channel)) data1_byte)
-      | CHANNEL_PRESSURE -> Bytes.of_string (Printf.sprintf "%c%c" (char_of_int (0xD0 lor message.MIDI_MESSAGE.channel)) data1_byte)
-      | PITCH_BEND -> Bytes.of_string (Printf.sprintf "%c%c%c" (char_of_int (0xE0 lor message.MIDI_MESSAGE.channel)) data1_byte data2_byte)
+      | NOTE_OFF ->
+          Bytes.of_string
+            (Printf.sprintf "%c%c%c" (Char.chr 0x80) data1_byte data2_byte)
+      | NOTE_ON ->
+          Bytes.of_string
+            (Printf.sprintf "%c%c%c" status_byte data1_byte data2_byte)
+      | POLY_PRESSURE ->
+          Bytes.of_string
+            (Printf.sprintf "%c%c%c"
+               (char_of_int (0xA0 lor message.MIDI_MESSAGE.channel))
+               data1_byte data2_byte)
+      | CONTROL_CHANGE ->
+          Bytes.of_string
+            (Printf.sprintf "%c%c%c"
+               (char_of_int (0xB0 lor message.MIDI_MESSAGE.channel))
+               data1_byte data2_byte)
+      | PROGRAM_CHANGE ->
+          Bytes.of_string
+            (Printf.sprintf "%c%c"
+               (char_of_int (0xC0 lor message.MIDI_MESSAGE.channel))
+               data1_byte)
+      | CHANNEL_PRESSURE ->
+          Bytes.of_string
+            (Printf.sprintf "%c%c"
+               (char_of_int (0xD0 lor message.MIDI_MESSAGE.channel))
+               data1_byte)
+      | PITCH_BEND ->
+          Bytes.of_string
+            (Printf.sprintf "%c%c%c"
+               (char_of_int (0xE0 lor message.MIDI_MESSAGE.channel))
+               data1_byte data2_byte)
       | SYSTEM_EXCLUSIVE -> failwith "System Exclusive messages not supported"
       | TIME_CODE -> failwith "Time Code messages not supported"
       | SONG_POSITION -> failwith "Song Position messages not supported"
@@ -95,7 +122,7 @@ module UDP_SERIALIZER = struct
       | None -> Bytes.get bytes 0
     in
     let message_type =
-      match (int_of_char status_byte) land 0xF0 with
+      match int_of_char status_byte land 0xF0 with
       | 0x80 -> NOTE_OFF
       | 0x90 -> NOTE_ON
       | 0xA0 -> POLY_PRESSURE
@@ -108,8 +135,12 @@ module UDP_SERIALIZER = struct
     let channel = int_of_char status_byte land 0x0F in
     let data1 = Bytes.get bytes 1 in
     let data2 = Bytes.get bytes 2 in
-    let timestamp = 0 in (* Set timestamp to 0 for now *)
-    let message = MIDI_MESSAGE.create ~message_type ~channel ~data1:(int_of_char data1) ~data2:(int_of_char data2) ~timestamp in
+    let timestamp = 0 in
+    (* Set timestamp to 0 for now *)
+    let message =
+      MIDI_MESSAGE.create ~message_type ~channel ~data1:(int_of_char data1)
+        ~data2:(int_of_char data2) ~timestamp
+    in
     previous_status := Some status_byte;
     message
 end

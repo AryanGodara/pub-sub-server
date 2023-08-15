@@ -39,10 +39,7 @@ let init () =
 
 type note_data = { note : char; volume : char }
 
-(** Define the message_on and message_off functions that need to be called to
-    with a 5s delay in between *)
 let message_on ~note ~timestamp ~volume ~channel () =
-  (* Logs.info (fun m -> m "Message on at %f\n", (Sys.time ())); *)
   let channel = 15 land channel in
   let status = char_of_int (144 lor channel) in
   Event.create ~status ~data1:note ~data2:volume ~timestamp
@@ -52,9 +49,107 @@ let message_off ~note ~timestamp ~volume ~channel () =
   let status = char_of_int (128 lor channel) in
   Event.create ~status ~data1:note ~data2:volume ~timestamp
 
+let message_poly_pressure ~note ~pressure ~timestamp ~channel () =
+  let channel = 15 land channel in
+  let status = char_of_int (160 lor channel) in
+  Event.create ~status ~data1:note ~data2:pressure ~timestamp
+
+let message_control_change ~controller ~value ~timestamp ~channel () =
+  let channel = 15 land channel in
+  let status = char_of_int (176 lor channel) in
+  Event.create ~status ~data1:controller ~data2:value ~timestamp
+
+let message_program_change ~program ~timestamp ~channel () =
+  let channel = 15 land channel in
+  let status = char_of_int (192 lor channel) in
+  Event.create ~status ~data1:program ~timestamp
+
+let message_channel_pressure ~pressure ~timestamp ~channel () =
+  let channel = 15 land channel in
+  let status = char_of_int (208 lor channel) in
+  Event.create ~status ~data1:pressure ~timestamp
+
+let message_pitch_bend ~value ~timestamp ~channel () =
+  let channel = 15 land channel in
+  let status = char_of_int (224 lor channel) in
+  let lsb = char_of_int (value land 0x7f) in
+  let msb = char_of_int ((value lsr 7) land 0x7f) in
+  Event.create ~status ~data1:lsb ~data2:msb ~timestamp
+
+let message_system_exclusive ~data ~timestamp () =
+  let status = '\240' in
+  Event.create ~status ~data1:data ~timestamp
+
+let message_time_code ~value ~timestamp () =
+  let status = '\241' in
+  Event.create ~status ~data1:value ~timestamp
+
+let message_song_position ~position ~timestamp () =
+  let status = '\242' in
+  let lsb = char_of_int (position land 0x7f) in
+  let msb = char_of_int ((position lsr 7) land 0x7f) in
+  Event.create ~status ~data1:lsb ~data2:msb ~timestamp
+
+let message_song_select ~song ~timestamp () =
+  let status = '\243' in
+  Event.create ~status ~data1:song ~timestamp
+
+let message_tune_request ~timestamp () =
+  let status = '\246' in
+  Event.create ~status ~timestamp
+
+let message_end_of_exclusive ~timestamp () =
+  let status = '\247' in
+  Event.create ~status ~timestamp
+
+let message_timing_clock ~timestamp () =
+  let status = '\248' in
+  Event.create ~status ~timestamp
+
+let message_start ~timestamp () =
+  let status = '\250' in
+  Event.create ~status ~timestamp
+
+let message_continue ~timestamp () =
+  let status = '\251' in
+  Event.create ~status ~timestamp
+
+let message_stop ~timestamp () =
+  let status = '\252' in
+  Event.create ~status ~timestamp
+
+let message_active_sensing ~timestamp () =
+  let status = '\254' in
+  Event.create ~status ~timestamp
+
+let message_system_reset ~timestamp () =
+  let status = '\255' in
+  Event.create ~status ~timestamp
+
 let handle_error = function
   | Ok _ -> ()
   | Error e -> Printf.printf "Encountered error: %s\n" (error_to_string e)
 
 let write_output { Device.device; Device.device_id = _ } msg =
   Portmidi.write_output device msg |> handle_error
+
+(* type hardcoded_midi_message =
+   | NOTE_OFF of { note : char; velocity : char; channel : int; timestamp : int32 }
+   | NOTE_ON of { note : char; velocity : char; channel : int; timestamp : int32 }
+   | POLY_PRESSURE of { note : char; pressure : char; channel : int; timestamp : int32 }
+   | CONTROL_CHANGE of { controller : char; value : char; channel : int; timestamp : int32 }
+   | PROGRAM_CHANGE of { program : char; channel : int; timestamp : int32 }
+   | CHANNEL_PRESSURE of { pressure : char; channel : int; timestamp : int32 }
+   | PITCH_BEND of { value : int; channel : int; timestamp : int32 }
+   | SYSTEM_EXCLUSIVE of { data : int; timestamp : int32 }
+   | TIME_CODE of { value : char; timestamp : int32 }
+   | SONG_POSITION of { position : int; timestamp : int32 }
+   | SONG_SELECT of { song : char; timestamp : int32 }
+   | TUNE_REQUEST of { timestamp : int32 }
+   | END_OF_EXCLUSIVE of { timestamp : int32 }
+   | TIMING_CLOCK of { timestamp : int32 }
+   | START of { timestamp : int32 }
+   | CONTINUE of { timestamp : int32 }
+   | STOP of { timestamp : int32 }
+   | ACTIVE_SENSING of { timestamp : int32 }
+   | SYSTEM_RESET of { timestamp : int32 } *)
