@@ -37,8 +37,6 @@ let init () =
   | Ok () -> ()
   | Error _ -> failwith "error initializing portmidi"
 
-type note_data = { note : char; volume : char }
-
 let message_on ~note ~timestamp ~volume ~channel () =
   let channel = 15 land channel in
   let status = char_of_int (144 lor channel) in
@@ -62,12 +60,12 @@ let message_control_change ~controller ~value ~timestamp ~channel () =
 let message_program_change ~program ~timestamp ~channel () =
   let channel = 15 land channel in
   let status = char_of_int (192 lor channel) in
-  Event.create ~status ~data1:program ~timestamp
+  Event.create ~status ~data1:program ~timestamp ~data2:(char_of_int 0)
 
 let message_channel_pressure ~pressure ~timestamp ~channel () =
   let channel = 15 land channel in
   let status = char_of_int (208 lor channel) in
-  Event.create ~status ~data1:pressure ~timestamp
+  Event.create ~status ~data1:pressure ~timestamp ~data2:(char_of_int 0)
 
 let message_pitch_bend ~value ~timestamp ~channel () =
   let channel = 15 land channel in
@@ -78,11 +76,11 @@ let message_pitch_bend ~value ~timestamp ~channel () =
 
 let message_system_exclusive ~data ~timestamp () =
   let status = '\240' in
-  Event.create ~status ~data1:data ~timestamp
+  Event.create ~status ~data1:data ~timestamp ~data2:(char_of_int 0)
 
 let message_time_code ~value ~timestamp () =
   let status = '\241' in
-  Event.create ~status ~data1:value ~timestamp
+  Event.create ~status ~data1:value ~timestamp ~data2:(char_of_int 0)
 
 let message_song_position ~position ~timestamp () =
   let status = '\242' in
@@ -92,39 +90,39 @@ let message_song_position ~position ~timestamp () =
 
 let message_song_select ~song ~timestamp () =
   let status = '\243' in
-  Event.create ~status ~data1:song ~timestamp
+  Event.create ~status ~data1:song ~timestamp ~data2:(char_of_int 0)
 
 let message_tune_request ~timestamp () =
   let status = '\246' in
-  Event.create ~status ~timestamp
+  Event.create ~status ~timestamp ~data1:(char_of_int 0) ~data2:(char_of_int 0)
 
 let message_end_of_exclusive ~timestamp () =
   let status = '\247' in
-  Event.create ~status ~timestamp
+  Event.create ~status ~timestamp ~data1:(char_of_int 0) ~data2:(char_of_int 0)
 
 let message_timing_clock ~timestamp () =
   let status = '\248' in
-  Event.create ~status ~timestamp
+  Event.create ~status ~timestamp ~data1:(char_of_int 0) ~data2:(char_of_int 0)
 
 let message_start ~timestamp () =
   let status = '\250' in
-  Event.create ~status ~timestamp
+  Event.create ~status ~timestamp ~data1:(char_of_int 0) ~data2:(char_of_int 0)
 
 let message_continue ~timestamp () =
   let status = '\251' in
-  Event.create ~status ~timestamp
+  Event.create ~status ~timestamp ~data1:(char_of_int 0) ~data2:(char_of_int 0)
 
 let message_stop ~timestamp () =
   let status = '\252' in
-  Event.create ~status ~timestamp
+  Event.create ~status ~timestamp ~data1:(char_of_int 0) ~data2:(char_of_int 0)
 
 let message_active_sensing ~timestamp () =
   let status = '\254' in
-  Event.create ~status ~timestamp
+  Event.create ~status ~timestamp ~data1:(char_of_int 0) ~data2:(char_of_int 0)
 
 let message_system_reset ~timestamp () =
   let status = '\255' in
-  Event.create ~status ~timestamp
+  Event.create ~status ~timestamp ~data1:(char_of_int 0) ~data2:(char_of_int 0)
 
 let handle_error = function
   | Ok _ -> ()

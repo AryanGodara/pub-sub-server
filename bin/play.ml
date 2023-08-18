@@ -68,7 +68,7 @@ let write_midi_message device message =
       |> write_output @@ device
   | SYSTEM_EXCLUSIVE ->
       [
-        message_system_exclusive ~data:message.data1
+        message_system_exclusive ~data:(char_of_int (message.data1))
           ~timestamp:(Int32.of_int message.timestamp)
           ();
       ]

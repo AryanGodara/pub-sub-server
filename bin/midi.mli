@@ -49,7 +49,7 @@ val message_channel_pressure :
 val message_pitch_bend :
   value:int -> timestamp:int32 -> channel:int -> unit -> Event.t
 
-val message_system_exclusive : data:int -> timestamp:int32 -> unit -> Event.t
+val message_system_exclusive : data:char -> timestamp:int32 -> unit -> Event.t
 val message_time_code : value:char -> timestamp:int32 -> unit -> Event.t
 val message_song_position : position:int -> timestamp:int32 -> unit -> Event.t
 val message_song_select : song:char -> timestamp:int32 -> unit -> Event.t
