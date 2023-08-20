@@ -43,7 +43,32 @@ type pubsubmessage =
   | CloseConnRequest
   | InvalidRequest of string
 
-let handle_message msg client_address =
+let publish_to_topic server_address topic message =
+let map_func = fun client_address -> 
+  Lwt_unix.sendto server_address (Bytes.of_string message) 0
+      (String.length message) [] client_address
+      >>= fun _ -> Lwt.return ()
+in
+let client_addr_list = TOPIC_FILTER.getSockets topic in  
+let send_tasks = List.map map_func client_addr_list in
+Lwt.join send_tasks
+  
+  (* This function handle_message takes a message (msg) and the server
+    address (server_address) as input and processes the message
+    according to the pubsubmessage type. It returns a string as a
+    response to the client. *)
+
+let play_midi_note message =
+  let message = parse_hex_string message in
+  let midi_message =
+    Rtpmidi.UDP_SERIALIZER.deserialize (message)
+  in
+  let dev = Play.device ~channel:(midi_message.channel) () in
+  Play.write_midi_message dev midi_message;
+  Midi.Device.shutdown dev |> ignore;
+  Lwt.return ()
+
+let handle_message msg server_address client_address =
   let lst = Str.split_delim (Str.regexp " ") msg in
   let udpMsg =
     match lst with
@@ -57,22 +82,19 @@ let handle_message msg client_address =
   match udpMsg with
   | SubscribeRequest topic ->
       TOPIC_FILTER.addSocket topic client_address;
-      "Subscribed to " ^ topic
+      Lwt.return ("Subscribed to " ^ topic)
   | UnsubscribeRequest topic ->
       TOPIC_FILTER.removeSocket topic client_address;
-      "Unsubscribed from " ^ topic
-  | DefPublishRequest message -> "Published on channel 0" ^ message
-  | PublishRequest (topic, message) ->
-      let dev = Play.device () in
-      let message = parse_hex_string message in
-      let midi_message =
-        Rtpmidi.UDP_SERIALIZER.deserialize (message)
-      in
-      Play.write_midi_message dev midi_message;
-      Midi.Device.shutdown dev |> ignore;
-      "Published " ^ (String.of_bytes message) ^ " on " ^ topic
-  | CloseConnRequest -> "quit"
-  | InvalidRequest msg -> msg
+      Lwt.return ("Unsubscribed from " ^ topic)
+  | DefPublishRequest message -> 
+    Lwt.return ("Published on channel 0" ^ message)
+  | PublishRequest (topic, message) -> 
+    let pub_res = publish_to_topic server_address topic message in
+    let midi_res = play_midi_note message in
+    Lwt.join [pub_res; midi_res] >>= fun () ->
+      Lwt.return ("Published " ^ message ^ " on " ^ topic)
+  | CloseConnRequest -> Lwt.return "quit"
+  | InvalidRequest msg -> Lwt.return msg
 
 (* This function handle_request takes a server socket (server_socket)
    as input and recursively listens for incoming UDP packets from
@@ -84,7 +106,7 @@ let rec handle_request server_socket =
   Lwt_unix.recvfrom server_socket buffer 0 1024 []
   >>= fun (num_bytes, client_address) ->
   let message = Bytes.sub_string buffer 0 num_bytes in
-  let reply = handle_message message client_address in
+  handle_message message server_socket client_address >>= fun reply ->
   match reply with
   | "quit" ->
       print_endline "Quitting Server...";
