@@ -1,6 +1,37 @@
 open Lwt.Infix
 open TopicFilter
 
+let parse_hex_string hex_string =
+  let length = String.length hex_string in
+  if length mod 2 <> 0 then failwith "Invalid hex string length";
+  let bytes = Bytes.create (length / 2) in
+  let i = ref 0 in
+  while !i < length do
+    let byte = int_of_string ("0x" ^ String.sub hex_string !i 2) |> char_of_int in
+    Bytes.set bytes (!i / 2) byte;
+    print_endline ("0x" ^ String.sub hex_string !i 2);
+    print_endline (String.sub hex_string !i 2);
+    i := !i + 2
+  done;
+  bytes
+
+let _parse_hex_string_of_variable_length hex_string =
+  let length = String.length hex_string in
+  if length mod 2 <> 0 then failwith "Invalid hex string length";
+  let bytes = Bytes.create (length / 2) in
+  let i = ref 0 in
+  while !i < length do
+    let byte =
+      if !i + 1 < length then
+        int_of_string ("0x" ^ String.sub hex_string !i 2) |> char_of_int
+      else
+        int_of_string ("0x" ^ String.sub hex_string !i 1 ^ "0") |> char_of_int
+    in
+    Bytes.set bytes (!i / 2) byte;
+    i := !i + 2
+  done;
+  bytes
+
 let listen_address = Unix.inet_addr_loopback
 let port = 9000
 
@@ -37,12 +68,23 @@ let handle_message msg client_address =
       "Unsubscribed from " ^ topic
   | DefPublishRequest message -> "Published on channel 0" ^ message
   | PublishRequest (topic, message) ->
-      let dev = Play.get_device () in
+    print_endline ("Inside PublishRequest, topic: " ^ topic);
+    print_endline ("Inside PublishRequest, message: " ^ message);
+      let dev = Play.device () in
+      let message = parse_hex_string message in
+      print_endline ("Inside PublishRequest, message: " ^ (String.of_bytes message));
       let midi_message =
-        Rtpmidi.UDP_SERIALIZER.deserialize (Bytes.of_string message)
+        Rtpmidi.UDP_SERIALIZER.deserialize (message)
       in
+      print_endline (string_of_int midi_message.channel);
+      print_endline (string_of_int midi_message.data1);
+      print_endline (string_of_int midi_message.data2);
+      print_endline (string_of_int midi_message.status_byte);
+      print_endline (string_of_int midi_message.timestamp);
+      print_endline "Calling write_midi_message";
       Play.write_midi_message dev midi_message;
-      "Published " ^ message ^ " on " ^ topic
+      Midi.Device.shutdown dev |> ignore;
+      "Published " ^ (String.of_bytes message) ^ " on " ^ topic
   | CloseConnRequest -> "quit"
   | InvalidRequest msg -> msg
 

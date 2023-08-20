@@ -1,8 +1,7 @@
 open Rtpmidi
 open Midi
 
-let device = Midi.Device.create 1
-let get_device () = device
+let device () = Midi.Device.create 1
 
 let write_midi_message device message =
   match message.MIDI_MESSAGE.message_type with

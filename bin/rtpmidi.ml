@@ -19,6 +19,13 @@ type midi_type =
   | ACTIVE_SENSING
   | SYSTEM_RESET
 
+let print_message_type message_type = 
+  match message_type with 
+    | NOTE_OFF -> print_endline "NOTE_OFF";
+    | NOTE_ON -> print_endline "NOTE_ON";
+    | _ -> print_endline "Something else";
+  
+
 module MIDI_MESSAGE = struct
   type t = {
     message_type : midi_type;
@@ -118,12 +125,14 @@ module UDP_SERIALIZER = struct
     bytes
 
   let deserialize bytes =
+    print_endline ("deserialize received" ^ (String.of_bytes bytes));
     let length = Bytes.length bytes in
+    print_endline ("length: " ^ (string_of_int length));
     if length < 1 || length > 3 then failwith "Invalid MIDI message bytes";
-    let status_byte =
-      match !previous_status with
+    let status_byte = Bytes.get bytes 0
+      (* match !previous_status with
       | Some byte -> byte
-      | None -> Bytes.get bytes 0
+      | None -> Bytes.get bytes 0 *)
     in
     let message_type =
       match int_of_char status_byte land 0xF0 with
@@ -136,6 +145,7 @@ module UDP_SERIALIZER = struct
       | 0xE0 -> PITCH_BEND
       | _ -> failwith "Invalid MIDI message status byte"
     in
+    print_message_type message_type;
     let channel = int_of_char status_byte land 0x0F in
     let data1 =
       if length >= 2 then Bytes.get bytes 1
