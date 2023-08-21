@@ -70,9 +70,9 @@ let message_channel_pressure ~pressure ~timestamp ~channel () =
 let message_pitch_bend ~value ~timestamp ~channel () =
   let channel = 15 land channel in
   let status = char_of_int (224 lor channel) in
-  let lsb = char_of_int (value land 0x7f) in
-  let msb = char_of_int ((value lsr 7) land 0x7f) in
-  Event.create ~status ~data1:lsb ~data2:msb ~timestamp
+  let data1 = char_of_int (value land 0x7f) in
+  let data2 = char_of_int ((value lsr 7) land 0x7f) in
+  Event.create ~status ~data1 ~data2 ~timestamp
 
 let message_system_exclusive ~data ~timestamp () =
   let status = '\240' in
@@ -84,9 +84,9 @@ let message_time_code ~value ~timestamp () =
 
 let message_song_position ~position ~timestamp () =
   let status = '\242' in
-  let lsb = char_of_int (position land 0x7f) in
-  let msb = char_of_int ((position lsr 7) land 0x7f) in
-  Event.create ~status ~data1:lsb ~data2:msb ~timestamp
+  let data1 = char_of_int (position land 0x7f) in
+  let data2 = char_of_int ((position lsr 7) land 0x7f) in
+  Event.create ~status ~data1 ~data2 ~timestamp
 
 let message_song_select ~song ~timestamp () =
   let status = '\243' in
