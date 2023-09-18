@@ -63,6 +63,7 @@ let play_midi_note message =
   let midi_message =
     Rtpmidi.UDP_SERIALIZER.deserialize (message)
   in
+  print_endline ("playing on channel " ^ string_of_int midi_message.channel);
   let dev = Play.device ~channel:(midi_message.channel) () in
   Play.write_midi_message dev midi_message;
   Midi.Device.shutdown dev |> ignore;

@@ -127,6 +127,18 @@ module UDP_SERIALIZER = struct
       | 0xC0 -> PROGRAM_CHANGE
       | 0xD0 -> CHANNEL_PRESSURE
       | 0xE0 -> PITCH_BEND
+      | 0xF0 -> SYSTEM_EXCLUSIVE
+      | 0xF1 -> TIME_CODE
+      | 0xF2 -> SONG_POSITION
+      | 0xF3 -> SONG_SELECT
+      | 0xF6 -> TUNE_REQUEST
+      | 0xF7 -> END_OF_EXCLUSIVE
+      | 0xF8 -> TIMING_CLOCK
+      | 0xFA -> START
+      | 0xFB -> CONTINUE
+      | 0xFC -> STOP
+      | 0xFE -> ACTIVE_SENSING
+      | 0xFF -> SYSTEM_RESET
       | _ -> failwith "Invalid MIDI message status byte"
     in
     let channel = int_of_char status_byte land 0x0F in
